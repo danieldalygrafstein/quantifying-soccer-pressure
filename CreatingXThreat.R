@@ -1,7 +1,8 @@
 ## Estimate XThreat on each of 96 regions
-## Combine event data from FAWSuperLeague, FIFAWorldCup, and NWSL
+## Add the xT added of each event in the statsbomb data
 
 library(dplyr)
+library(ggplot2)
 library(ggsoccer)
 library(akima)
 library(RColorBrewer)
@@ -45,13 +46,13 @@ move_transition_matrix <- move_transition_matrix/rowSums(move_transition_matrix)
 # Iterate to calculate xT starting with xT = 0
 
 xT <- as.data.frame(cbind(ShotMoveTurnover_probs_xG$location.bin, rep(0,96)))
-names(xT) <- c("location.bin","xT_location")
+names(xT) <- c("location.bin","xT")
 
 iterations = 100
 
 for (i in 1:iterations){
   xT$xT <- ShotMoveTurnover_probs_xG$shot_prob*ShotMoveTurnover_probs_xG$avg_XG +
-                    ShotMoveTurnover_probs_xG$move_prob*(move_transition_matrix%*%as.matrix(xT$xT_location))
+                    ShotMoveTurnover_probs_xG$move_prob*(move_transition_matrix%*%as.matrix(xT$xT))
 }
 
 
@@ -84,9 +85,49 @@ p <- create_Pitch(line_colour = "black", goal_colour = "black", BasicFeatures = 
 
 xT_heatmap <- p + geom_tile(data=gdat, aes(x=x, y=y, fill=xT), alpha=0.7) +   
               scale_fill_gradientn(colours=cols, na.value="white")
-xT_heatmap
+#xT_heatmap
 #ggsave(xT_heatmap, filename = "xTHeatMap.png")
-write.csv(xT, file = "xT_locations.csv")
+
+
+## Add xTAdded to each event
+
+calc_xT_added <- function(event) {
+  
+  if (!is.na(event$location.received.bin)){
+    xT_added <- xT[xT$location.bin==event$location.received.bin,]$xT - 
+      xT[xT$location.bin==event$location.bin,]$xT
+  } else if (event$type.id == 16){
+    xT_added <- xT[xT$location.bin==event$location.bin,]$xT
+  } else if (event$type.id %in% c(3,38) | !is.na(event$pass.outcome.id) | event$dribble.outcome.name=="Incomplete"){
+    xT_added <- -xT[xT$location.bin==event$location.bin,]$xT
+  } else {
+    xT_added <- 0
+  }
+  
+  return(xT_added)
+  
+}
+
+
+
+xT_added <- rep(NA, nrow(statsbomb_events))
+
+pb <- txtProgressBar(min = 0, max = nrow(statsbomb_events), style = 3)
+
+for (i in 1:nrow(statsbomb_events)){
+  
+  # update progress bar
+  setTxtProgressBar(pb, i)
+  
+  event <- statsbomb_events[i,]
+  
+  xT_added[i] <- calc_xT_added(event)
+}
+
+statsbomb_events["xT_added"] <- xT_added
+summary(statsbomb_events$xT_added)
+write.csv(statsbomb_events, file="Statsbombevents.csv")
+
 
 
   
