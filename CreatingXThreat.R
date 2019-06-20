@@ -10,7 +10,7 @@ library(RColorBrewer)
 
 
 
-statsbomb_events <- read.csv("Statsbombevents.csv")
+statsbomb_events <- read.csv("Statsbombevents.csv", row.names = 1)
 
 
 # Calculate shot probability, avg xG, movement probability, and matrix of transition probabilities
@@ -126,7 +126,7 @@ for (i in 1:nrow(statsbomb_events)){
 
 statsbomb_events["xT_added"] <- xT_added
 summary(statsbomb_events$xT_added)
-write.csv(statsbomb_events, file="Statsbombevents.csv")
+write.csv(statsbomb_events, file="Statsbombevents_added.csv")
 
 
 

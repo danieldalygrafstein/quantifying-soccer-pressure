@@ -9,7 +9,7 @@ library(reshape2)
 source("soccerPitch.R")
 
 
-statsbomb_events <- read.csv("Statsbombevents.csv", row.names = 1)
+statsbomb_events <- read.csv("Statsbombevents_xTadded.csv", row.names = 1)
 
 
 ## Where are pressures happening? Where passturnovers happening?
