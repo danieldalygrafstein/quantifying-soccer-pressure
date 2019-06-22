@@ -267,7 +267,9 @@ turnovers_pct_location <- statsbomb_events_trimmed %>% filter(!is.na(under_press
             position_group = check_position(check_majority(position.name)))
 
 
-turnovers_pct_location <- turnovers_pct_location[c(1:9),]
+turnovers_pct_location <- turnovers_pct_location[turnovers_pct_location$player.name %in% c("Abbey-Leigh Stringer",
+                                                                                           "Abbie McManus",
+                                                                                           "Alisha Lehmann"),]
 
 
 turnovers_pct_location.m <- melt(turnovers_pct_location, id.vars = c("player.name", 
